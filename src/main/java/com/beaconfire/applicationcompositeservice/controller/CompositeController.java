@@ -1,8 +1,10 @@
 package com.beaconfire.applicationcompositeservice.controller;
 
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.EmployeeApplicationRequest;
 import com.beaconfire.applicationcompositeservice.service.CompositeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,9 +24,16 @@ public class CompositeController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestPart(value = "file") MultipartFile file){
+    public ResponseEntity<String> uploadFile(@RequestPart(value = "file") MultipartFile file,
+                                             @RequestPart(value = "folder") String folder){
 
-        return service.uploadFile(file);
+        return service.uploadFile(folder, file);
+    }
+
+    @PostMapping(value = "/uploadEmpInfo")
+    public ResponseEntity<String> uploadFile(@RequestBody EmployeeApplicationRequest empRequest) {
+
+        return service.uploadEmployeeInfo(empRequest);
     }
 
 

@@ -1,5 +1,6 @@
 package com.beaconfire.applicationcompositeservice.service;
 
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.EmployeeApplicationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,14 +20,8 @@ import java.util.List;
 @Service
 public class CompositeService {
 
-//    private RemoteHousingService housingService;
-
     private RestTemplate restTemplate;
 
-//    @Autowired
-//    public void setHousingService(RemoteHousingService housingService) {
-//        this.housingService = housingService;
-//    }
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
@@ -34,23 +29,22 @@ public class CompositeService {
     }
 
     //Using RestTemplate
-//    public AllLandlordResponse getLandlordRest() {
-//        ResponseEntity<List<Landlord>> landlordResponse = restTemplate.exchange(
-//                "http://housing-service/housing-service/housing-service", HttpMethod.GET, null, new ParameterizedTypeReference<List<Landlord>>() {
-//                }
-//        );
-//
-//        return AllLandlordResponse.builder()
-//                .landlordList(landlordResponse.getBody())
-//                .build();
-//    }
+    public ResponseEntity<String> uploadEmployeeInfo(EmployeeApplicationRequest empRequest) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "http://employee-service/employee-service/employee-service", empRequest, String.class
+        );
+        return response;
+    }
 
-    public ResponseEntity<String> uploadFile(MultipartFile file) {
+    public ResponseEntity<String> uploadFile(String folder, MultipartFile file) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         map.add("file", file.getResource());
+        map.add("folder", folder);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
         ResponseEntity<String> response = restTemplate.exchange(
