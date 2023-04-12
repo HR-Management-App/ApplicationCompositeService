@@ -2,6 +2,8 @@ package com.beaconfire.applicationcompositeservice.service;
 
 import com.beaconfire.applicationcompositeservice.domain.ApplicationService.ApplicationWorkFlow;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.EmployeeApplicationRequest;
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.response.EmployeeProfileResponse;
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.response.FinalProfileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 
@@ -68,13 +71,14 @@ public class CompositeService {
     public ApplicationWorkFlow getApplicationStatusByEmployeeID(int employee_id) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+//        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+//        map.add("employee_id", employee_id);
+//        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
 
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("employee_id", employee_id);
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
         ResponseEntity<ApplicationWorkFlow> response = restTemplate.exchange(
-                "http://application-service/application-service/application-service/status", HttpMethod.GET, requestEntity, ApplicationWorkFlow.class
+                "http://application-service/application-service/application-service/status?employee_id={employee_id}",
+                HttpMethod.GET, requestEntity , ApplicationWorkFlow.class, employee_id
         );
         return response.getBody();
     }
@@ -91,5 +95,80 @@ public class CompositeService {
         return response.getBody();
     }
 
+    public void updateApplication(int app_id, String status) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<ApplicationWorkFlow> response = restTemplate.exchange(
+                "http://application-service/application-service/application-service/update/{app_id}/{status}",
+                HttpMethod.PUT, requestEntity , ApplicationWorkFlow.class, app_id, status
+        );
+    }
+
+    public ResponseEntity<String> getDocumentPath(int emp_id, String title) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<String> response = restTemplate.exchange(
+                "http://employee-service/employee-service/employee-service/document?emp_id={emp_id}&title={title}",
+                HttpMethod.GET, requestEntity , String.class, emp_id, title
+        );
+        return response;
+    }
+
+    public ResponseEntity<ByteArrayResource> downloadFile(String filename) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<ByteArrayResource> response = restTemplate.exchange(
+                "http://storage-service/storage-service/storage-service/download?filename={filename}",
+                HttpMethod.GET, requestEntity , ByteArrayResource.class,filename
+        );
+        return response;
+    }
+
+    @GetMapping("/digital")
+    public ResponseEntity<String> getDigitalDocument(String type) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<String> response = restTemplate.exchange(
+                "http://application-service/application-service/application-service/digital?type={type}",
+                HttpMethod.GET, requestEntity , String.class, type
+        );
+        return response;
+    }
+
+    public FinalProfileResponse getEmployeeProfile(int employee_id) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<EmployeeProfileResponse> response = restTemplate.exchange(
+                "http://employee-service/employee-service/employee-service/{id}/profile",
+                HttpMethod.GET, requestEntity , EmployeeProfileResponse.class, employee_id
+        );
+
+        EmployeeProfileResponse emp = response.getBody();
+        FinalProfileResponse profileResponse = FinalProfileResponse.builder()
+                .firstName(emp.getFirstName())
+                .lastName(emp.getLastName())
+                .middleName(emp.getMiddleName())
+                .preferredName(emp.getPreferredName())
+                .profilePictureUrl(emp.getProfilePictureUrl())
+                .email(emp.getEmail())
+                .dob(emp.getDob())
+                .gender(emp.getGender())
+                .currentAddress(emp.getCurrentAddress())
+                .cellPhoneNumber(emp.getCellPhoneNumber())
+                .visaStatus(emp.getVisaStatus().getVisaType())
+                .driverLicense(emp.getDriverLicense())
+                .build();
+        return profileResponse;
+    }
 
 }
