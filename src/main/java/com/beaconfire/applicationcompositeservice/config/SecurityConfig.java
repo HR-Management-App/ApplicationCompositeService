@@ -33,12 +33,11 @@ public class SecurityConfig {
         http.cors().and().csrf().disable()
                 .addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
+                .antMatchers("/composite/updateApplication").hasAuthority("hr")
+                .antMatchers("/composite/upload", "/uploadEmpInfo", "/updatePath").hasAuthority("employee")
                 .antMatchers("/composite/status").permitAll()
-                .antMatchers("/composite/upload").permitAll()
                 .anyRequest()
                 .authenticated();
-
-//        http.csrf().disable();
 
         return http.build();
     }

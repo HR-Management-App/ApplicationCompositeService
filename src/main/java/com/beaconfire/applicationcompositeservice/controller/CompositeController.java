@@ -2,7 +2,9 @@ package com.beaconfire.applicationcompositeservice.controller;
 
 import com.beaconfire.applicationcompositeservice.domain.ApplicationService.ApplicationWorkFlow;
 import com.beaconfire.applicationcompositeservice.domain.ApplicationService.misc.ApplicationStatus;
+import com.beaconfire.applicationcompositeservice.domain.ApplicationService.request.ApplicationUpdateRequest;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.EmployeeApplicationRequest;
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.FilePathRequest;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.response.FinalProfileResponse;
 import com.beaconfire.applicationcompositeservice.security.TokenUserDetail;
 import com.beaconfire.applicationcompositeservice.service.CompositeService;
@@ -55,17 +57,18 @@ public class CompositeController {
         int userID = ((TokenUserDetail) SecurityContextHolder.getContext().getAuthentication().getDetails()).getUser_id();
         int employeeID = service.findEmployeeIdByUserId(userID);
         if (employeeID != -1) { // not submitted application yet
+
             ApplicationWorkFlow app = service.getApplicationStatusByEmployeeID(employeeID);
-            return new ResponseEntity<>("{\"status\" : \""+ app.getStatus() + "\"}", HttpStatus.OK);
+            return new ResponseEntity<>("{\"status\" : \""+ app.getStatus() + "\"," + "\"comment\" : \""+ app.getComment() + "\"}", HttpStatus.OK);
         } else {
             return new ResponseEntity<>("{\"status\" : \""+ ApplicationStatus.NEVER_SUBMITTED + "\"}", HttpStatus.OK);
         }
     }
 
     // HR
-    @PutMapping ("/update/{app_id}/{status}")
-    public void updateApplication(@PathVariable int app_id, @PathVariable String status) {
-        service.updateApplication(app_id, status);
+    @PutMapping ("/updateApplication")
+    public void updateApplication(@RequestBody ApplicationUpdateRequest request) {
+        service.updateApplication(request);
     }
 
     @GetMapping ("/{user_id}")
@@ -93,6 +96,16 @@ public class CompositeController {
     @GetMapping("/{id}/profile")
     public ResponseEntity<FinalProfileResponse> getEmployeeProfile(@PathVariable int id) {
         return new ResponseEntity<>(service.getEmployeeProfile(id), HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/updatePath")
+    public void updatePathFileByTitle(@RequestBody FilePathRequest filePathRequest) {
+        service.updatePathFileByTitle(filePathRequest);
+    }
+
+    @GetMapping(value = "/getActiveFlag")
+    public boolean getVisaFlag(@RequestParam int emp_id, @RequestParam String type) {
+        return service.getVisaFlag(emp_id, type);
     }
 
 }

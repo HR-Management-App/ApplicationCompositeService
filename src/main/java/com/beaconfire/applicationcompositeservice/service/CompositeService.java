@@ -1,7 +1,9 @@
 package com.beaconfire.applicationcompositeservice.service;
 
 import com.beaconfire.applicationcompositeservice.domain.ApplicationService.ApplicationWorkFlow;
+import com.beaconfire.applicationcompositeservice.domain.ApplicationService.request.ApplicationUpdateRequest;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.EmployeeApplicationRequest;
+import com.beaconfire.applicationcompositeservice.domain.EmployeeService.request.FilePathRequest;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.response.EmployeeProfileResponse;
 import com.beaconfire.applicationcompositeservice.domain.EmployeeService.response.FinalProfileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -95,15 +98,33 @@ public class CompositeService {
         return response.getBody();
     }
 
-    public void updateApplication(int app_id, String status) {
+    public void updateApplication(ApplicationUpdateRequest request) {
+//        HttpHeaders httpHeaders = new HttpHeaders();
+//        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+//
+//        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+//        ResponseEntity<ApplicationWorkFlow> response = restTemplate.exchange(
+//                "http://application-service/application-service/application-service/update/{app_id}/{status}",
+//                HttpMethod.PUT, requestEntity , ApplicationWorkFlow.class, app_id, status
+//        );
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        HttpEntity<ApplicationUpdateRequest> requestEntity = new HttpEntity(request, httpHeaders);
         ResponseEntity<ApplicationWorkFlow> response = restTemplate.exchange(
-                "http://application-service/application-service/application-service/update/{app_id}/{status}",
-                HttpMethod.PUT, requestEntity , ApplicationWorkFlow.class, app_id, status
+                "http://application-service/application-service/application-service/update",
+                HttpMethod.PUT, requestEntity , ApplicationWorkFlow.class
         );
+
+//        HttpHeaders httpHeaders = new HttpHeaders();
+//        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+//
+//        restTemplate.put(
+//                "http://application-service/application-service/application-service/update",
+//                request , ApplicationWorkFlow.class);
+
+
     }
 
     public ResponseEntity<String> getDocumentPath(int emp_id, String title) {
@@ -169,6 +190,27 @@ public class CompositeService {
                 .driverLicense(emp.getDriverLicense())
                 .build();
         return profileResponse;
+    }
+
+    public void updatePathFileByTitle(FilePathRequest filePathRequest) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        restTemplate.put(
+                "http://employee-service/employee-service/employee-service/updatePath",
+                filePathRequest , Void.class);
+    }
+
+    public boolean getVisaFlag(int emp_id, String type) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity requestEntity = new HttpEntity(httpHeaders);
+        ResponseEntity<Boolean> response = restTemplate.exchange(
+                "http://employee-service/employee-service/employee-service/getActiveFlag?emp_id=" + emp_id + "&type=" +type,
+                HttpMethod.GET, requestEntity , Boolean.class
+        );
+        return response.getBody();
     }
 
 }
